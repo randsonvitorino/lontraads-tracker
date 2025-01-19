@@ -19,9 +19,9 @@
             xhr.onreadystatechange = function() {
                 if (xhr.readyState === 4) {
                     if (xhr.status === 200) {
-                        console.log('Visita registrada com sucesso');
+                        console.log('Dados do visitante enviados com sucesso');
                     } else {
-                        console.error('Erro ao registrar visita');
+                        console.error('Erro ao enviar dados do visitante');
                     }
                 }
             };
@@ -35,14 +35,17 @@
                        '&referrer=' + encodeURIComponent(referrer) +
                        '&campaign_id=' + encodeURIComponent(campaignId);
             xhr.send(data);
-        } else {
-            console.log('Visita não registrada: domínio do plugin');
         }
     }
 
     function getCampaignId() {
         var urlParams = new URLSearchParams(window.location.search);
-        return urlParams.get('campaign_id') || '';
+        return urlParams.get('campaign_id') || 
+               urlParams.get('gclid') || 
+               urlParams.get('fbclid') || 
+               urlParams.get('msclkid') || 
+               urlParams.get('wbraid') || 
+               '';
     }
 
     function enhancePageLinks() {
@@ -60,7 +63,12 @@
         var pageLinks = document.getElementsByTagName('a');
         for (var i = 0; i < pageLinks.length; i++) {
             var link = pageLinks[i];
-            var linkUrl = new URL(link.href);
+            var linkUrl = new URL(link.href, window.location.href);
+            
+            if (linkUrl.hostname !== window.location.hostname || linkUrl.hostname === new URL(originUrl).hostname) {
+                continue;
+            }
+
             var hashPart = linkUrl.hash;
             linkUrl.search = new URLSearchParams([...queryParams, ...new URLSearchParams(linkUrl.search)]);
             
@@ -72,14 +80,12 @@
         }
     }
 
-    if (!sessionStorage.getItem('lontraads_visit_recorded')) {
-        sendVisitorData();
-        sessionStorage.setItem('lontraads_visit_recorded', 'true');
+    // Executa as funções principais
+    sendVisitorData();
+    
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', enhancePageLinks);
+    } else {
+        enhancePageLinks();
     }
-
-    window.addEventListener('beforeunload', function() {
-        sessionStorage.removeItem('lontraads_visit_recorded');
-    });
-
-    enhancePageLinks();
 })();
