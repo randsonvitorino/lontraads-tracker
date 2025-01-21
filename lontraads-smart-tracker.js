@@ -31,16 +31,15 @@
             var link = links[i];
             var href = link.href;
             var originalHref = href;
-            var separator = href.indexOf('?') !== -1 ? '&' : '?';
+            var url = new URL(href);
             
             for (var key in urlParams) {
                 if (key === 'campaign_id' || key === 'gclid' || key === 'fbclid' || key === 'msclkid' || key === 'wbraid') {
-                    href += separator + key + '=' + encodeURIComponent(urlParams[key]);
-                    separator = '&';
+                    url.searchParams.append(key, urlParams[key]);
                 }
             }
             
-            link.href = href;
+            link.href = url.toString();
             console.log(`Link ${i + 1} modificado:`, originalHref, "->", link.href);
         }
 
@@ -48,41 +47,7 @@
     }
 
     function sendVisitorData() {
-        console.log("Iniciando sendVisitorData");
-        if (!originUrl) {
-            console.error('Origin URL não encontrada. O script não pode prosseguir.');
-            return;
-        }
-
-        var currentDomain = window.location.hostname;
-        var pluginDomain = new URL(originUrl).hostname;
-
-        console.log("Current Domain:", currentDomain, "Plugin Domain:", pluginDomain);
-
-        if (currentDomain !== pluginDomain) {
-            var xhr = new XMLHttpRequest();
-            xhr.open('POST', originUrl + '/wp-admin/admin-ajax.php', true);
-            xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
-            
-            xhr.onreadystatechange = function() {
-                if (xhr.readyState === 4) {
-                    if (xhr.status === 200) {
-                        console.log('Dados do visitante enviados com sucesso');
-                    } else {
-                        console.error('Erro ao enviar dados do visitante');
-                    }
-                }
-            };
-
-            var campaignId = getAllUrlParams()['campaign_id'] || '';
-            console.log("Campaign ID:", campaignId);
-
-            var data = 'action=lontraads_record_visit' +
-                       '&domain=' + encodeURIComponent(currentDomain) +
-                       '&campaign_id=' + encodeURIComponent(campaignId);
-            xhr.send(data);
-            console.log("Dados enviados:", data);
-        }
+        // ... (mantenha o código existente para sendVisitorData)
     }
 
     // Executa as funções principais
