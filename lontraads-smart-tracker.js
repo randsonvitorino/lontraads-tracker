@@ -1,109 +1,23 @@
 (function() {
-    console.log("Script iniciado");
-
-    var originUrl = document.currentScript.getAttribute('data-origin-url');
-
-    function getAllUrlParams() {
-        var queryString = window.location.search.slice(1);
-        var obj = {};
-        if (queryString) {
-            queryString = queryString.split('#')[0];
-            var arr = queryString.split('&');
-            for (var i = 0; i < arr.length; i++) {
-                var a = arr[i].split('=');
-                var paramName = a[0];
-                var paramValue = typeof (a[1]) === 'undefined' ? true : decodeURIComponent(a[1]);
-                obj[paramName] = paramValue;
-            }
-        }
-        return obj;
-    }
-
-    function enhancePageLinks() {
-        console.log("Iniciando enhancePageLinks");
-        var urlParams = getAllUrlParams();
-        console.log("Parâmetros da URL atual:", JSON.stringify(urlParams));
-
+    function updateAffiliateLinks() {
+        var currentParams = new URLSearchParams(window.location.search);
         var links = document.getElementsByTagName('a');
-        console.log("Total de links encontrados:", links.length);
-
+        
         for (var i = 0; i < links.length; i++) {
             var link = links[i];
-            var originalHref = link.href;
-            
-            // Separar a URL base do hash
-            var [baseUrl, hash] = originalHref.split('#');
-            var url = new URL(baseUrl, window.location.href);
-            
-            // Adicionar todos os parâmetros da URL atual
-            for (var key in urlParams) {
-                // Incluir todos os parâmetros, especialmente os 'subid'
-                url.searchParams.set(key, urlParams[key]);
+            if (link.href.includes('balmorexpro.com/welcome/')) {
+                var affUrl = new URL(link.href);
+                currentParams.forEach(function(value, key) {
+                    affUrl.searchParams.append(key, value);
+                });
+                link.href = affUrl.toString();
             }
-            
-            // Reconstruir a URL com o hash, se existir
-            var newHref = url.toString() + (hash ? '#' + hash : '');
-            link.href = newHref;
-            
-            console.log(`Link ${i + 1} modificado:`, originalHref, "->", newHref);
-        }
-
-        console.log("Modificação de links concluída");
-    }
-
-    function sendVisitorData() {
-        console.log("Iniciando sendVisitorData");
-        if (!originUrl) {
-            console.error('Origin URL não encontrada. O script não pode prosseguir.');
-            return;
-        }
-
-        var currentDomain = window.location.hostname;
-        var pluginDomain = new URL(originUrl).hostname;
-
-        console.log("Current Domain:", currentDomain, "Plugin Domain:", pluginDomain);
-
-        if (currentDomain !== pluginDomain) {
-            var xhr = new XMLHttpRequest();
-            xhr.open('POST', originUrl + '/wp-admin/admin-ajax.php', true);
-            xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
-            
-            xhr.onreadystatechange = function() {
-                if (xhr.readyState === 4) {
-                    if (xhr.status === 200) {
-                        console.log('Dados do visitante enviados com sucesso');
-                    } else {
-                        console.error('Erro ao enviar dados do visitante');
-                    }
-                }
-            };
-
-            var urlParams = getAllUrlParams();
-            var data = 'action=lontraads_record_visit' +
-                       '&domain=' + encodeURIComponent(currentDomain);
-
-            // Adicionar todos os parâmetros da URL à solicitação
-            for (var key in urlParams) {
-                data += '&' + encodeURIComponent(key) + '=' + encodeURIComponent(urlParams[key]);
-            }
-
-            xhr.send(data);
-            console.log("Dados enviados:", data);
         }
     }
 
-    // Executa as funções principais
     if (document.readyState === 'loading') {
-        console.log("DOM ainda carregando, adicionando evento listener");
-        document.addEventListener('DOMContentLoaded', function() {
-            enhancePageLinks();
-            sendVisitorData();
-        });
+        document.addEventListener('DOMContentLoaded', updateAffiliateLinks);
     } else {
-        console.log("DOM já carregado, executando funções imediatamente");
-        enhancePageLinks();
-        sendVisitorData();
+        updateAffiliateLinks();
     }
-
-    console.log("Script concluído");
 })();
