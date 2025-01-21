@@ -29,18 +29,24 @@
 
         for (var i = 0; i < links.length; i++) {
             var link = links[i];
-            var href = link.href;
-            var originalHref = href;
-            var url = new URL(href);
+            var originalHref = link.href;
             
+            // Separar a URL base do hash
+            var [baseUrl, hash] = originalHref.split('#');
+            var url = new URL(baseUrl, window.location.href);
+            
+            // Adicionar ou atualizar parâmetros
             for (var key in urlParams) {
                 if (key === 'campaign_id' || key === 'gclid' || key === 'fbclid' || key === 'msclkid' || key === 'wbraid') {
-                    url.searchParams.append(key, urlParams[key]);
+                    url.searchParams.set(key, urlParams[key]);
                 }
             }
             
-            link.href = url.toString();
-            console.log(`Link ${i + 1} modificado:`, originalHref, "->", link.href);
+            // Reconstruir a URL com o hash, se existir
+            var newHref = url.toString() + (hash ? '#' + hash : '');
+            link.href = newHref;
+            
+            console.log(`Link ${i + 1} modificado:`, originalHref, "->", newHref);
         }
 
         console.log("Modificação de links concluída");
