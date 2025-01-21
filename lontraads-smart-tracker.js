@@ -1,60 +1,7 @@
 (function() {
     console.log("Script iniciado");
 
-    function sendVisitorData() {
-        console.log("Iniciando sendVisitorData");
-        var scriptElement = document.querySelector('script[data-origin-url]');
-        var originUrl = scriptElement ? scriptElement.getAttribute('data-origin-url') : null;
-
-        if (!originUrl) {
-            console.error('Origin URL não encontrada. O script não pode prosseguir.');
-            return;
-        }
-
-        console.log("Origin URL encontrada:", originUrl);
-
-        var currentDomain = window.location.hostname;
-        var pluginDomain = new URL(originUrl).hostname;
-
-        console.log("Current Domain:", currentDomain, "Plugin Domain:", pluginDomain);
-
-        if (currentDomain !== pluginDomain) {
-            var xhr = new XMLHttpRequest();
-            xhr.open('POST', originUrl + '/wp-admin/admin-ajax.php', true);
-            xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
-            
-            xhr.onreadystatechange = function() {
-                if (xhr.readyState === 4) {
-                    if (xhr.status === 200) {
-                        console.log('Dados do visitante enviados com sucesso');
-                    } else {
-                        console.error('Erro ao enviar dados do visitante');
-                    }
-                }
-            };
-
-            var campaignId = getCampaignId();
-            console.log("Campaign ID:", campaignId);
-
-            var data = 'action=lontraads_record_visit' +
-                       '&domain=' + encodeURIComponent(currentDomain) +
-                       '&campaign_id=' + encodeURIComponent(campaignId);
-            xhr.send(data);
-            console.log("Dados enviados:", data);
-        }
-    }
-
-    function getCampaignId() {
-        var urlParams = new URLSearchParams(window.location.search);
-        var campaignId = urlParams.get('campaign_id') || 
-                         urlParams.get('gclid') || 
-                         urlParams.get('fbclid') || 
-                         urlParams.get('msclkid') || 
-                         urlParams.get('wbraid') || 
-                         '';
-        console.log("getCampaignId retornou:", campaignId);
-        return campaignId;
-    }
+    var originUrl = document.currentScript.getAttribute('data-origin-url');
 
     function getAllUrlParams() {
         var queryString = window.location.search.slice(1);
@@ -100,15 +47,55 @@
         console.log("Modificação de links concluída");
     }
 
+    function sendVisitorData() {
+        console.log("Iniciando sendVisitorData");
+        if (!originUrl) {
+            console.error('Origin URL não encontrada. O script não pode prosseguir.');
+            return;
+        }
+
+        var currentDomain = window.location.hostname;
+        var pluginDomain = new URL(originUrl).hostname;
+
+        console.log("Current Domain:", currentDomain, "Plugin Domain:", pluginDomain);
+
+        if (currentDomain !== pluginDomain) {
+            var xhr = new XMLHttpRequest();
+            xhr.open('POST', originUrl + '/wp-admin/admin-ajax.php', true);
+            xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+            
+            xhr.onreadystatechange = function() {
+                if (xhr.readyState === 4) {
+                    if (xhr.status === 200) {
+                        console.log('Dados do visitante enviados com sucesso');
+                    } else {
+                        console.error('Erro ao enviar dados do visitante');
+                    }
+                }
+            };
+
+            var campaignId = getAllUrlParams()['campaign_id'] || '';
+            console.log("Campaign ID:", campaignId);
+
+            var data = 'action=lontraads_record_visit' +
+                       '&domain=' + encodeURIComponent(currentDomain) +
+                       '&campaign_id=' + encodeURIComponent(campaignId);
+            xhr.send(data);
+            console.log("Dados enviados:", data);
+        }
+    }
+
     // Executa as funções principais
-    sendVisitorData();
-    
     if (document.readyState === 'loading') {
         console.log("DOM ainda carregando, adicionando evento listener");
-        document.addEventListener('DOMContentLoaded', enhancePageLinks);
+        document.addEventListener('DOMContentLoaded', function() {
+            enhancePageLinks();
+            sendVisitorData();
+        });
     } else {
-        console.log("DOM já carregado, executando enhancePageLinks imediatamente");
+        console.log("DOM já carregado, executando funções imediatamente");
         enhancePageLinks();
+        sendVisitorData();
     }
 
     console.log("Script concluído");
