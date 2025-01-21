@@ -1,5 +1,8 @@
 (function() {
+    console.log("Script iniciado");
+
     function sendVisitorData() {
+        console.log("Iniciando sendVisitorData");
         var scriptElement = document.querySelector('script[data-origin-url]');
         var originUrl = scriptElement ? scriptElement.getAttribute('data-origin-url') : null;
 
@@ -8,8 +11,12 @@
             return;
         }
 
+        console.log("Origin URL encontrada:", originUrl);
+
         var currentDomain = window.location.hostname;
         var pluginDomain = new URL(originUrl).hostname;
+
+        console.log("Current Domain:", currentDomain, "Plugin Domain:", pluginDomain);
 
         if (currentDomain !== pluginDomain) {
             var xhr = new XMLHttpRequest();
@@ -27,31 +34,40 @@
             };
 
             var campaignId = getCampaignId();
+            console.log("Campaign ID:", campaignId);
 
             var data = 'action=lontraads_record_visit' +
                        '&domain=' + encodeURIComponent(currentDomain) +
                        '&campaign_id=' + encodeURIComponent(campaignId);
             xhr.send(data);
+            console.log("Dados enviados:", data);
         }
     }
 
     function getCampaignId() {
         var urlParams = new URLSearchParams(window.location.search);
-        return urlParams.get('campaign_id') || 
-               urlParams.get('gclid') || 
-               urlParams.get('fbclid') || 
-               urlParams.get('msclkid') || 
-               urlParams.get('wbraid') || 
-               '';
+        var campaignId = urlParams.get('campaign_id') || 
+                         urlParams.get('gclid') || 
+                         urlParams.get('fbclid') || 
+                         urlParams.get('msclkid') || 
+                         urlParams.get('wbraid') || 
+                         '';
+        console.log("getCampaignId retornou:", campaignId);
+        return campaignId;
     }
 
     function enhancePageLinks() {
+        console.log("Iniciando enhancePageLinks");
         var queryParams = new URLSearchParams(window.location.search);
+        console.log("Parâmetros da URL atual:", queryParams.toString());
         var campaignId = getCampaignId();
 
         var pageLinks = document.getElementsByTagName('a');
+        console.log("Total de links encontrados:", pageLinks.length);
+
         for (var i = 0; i < pageLinks.length; i++) {
             var link = pageLinks[i];
+            var originalHref = link.href;
             var linkUrl = new URL(link.href, window.location.href);
 
             var hashPart = linkUrl.hash;
@@ -62,15 +78,22 @@
             }
 
             link.href = linkUrl.toString().split('#')[0] + hashPart;
+            console.log(`Link ${i + 1} modificado:`, originalHref, "->", link.href);
         }
+
+        console.log("Modificação de links concluída");
     }
 
     // Executa as funções principais
     sendVisitorData();
     
     if (document.readyState === 'loading') {
+        console.log("DOM ainda carregando, adicionando evento listener");
         document.addEventListener('DOMContentLoaded', enhancePageLinks);
     } else {
+        console.log("DOM já carregado, executando enhancePageLinks imediatamente");
         enhancePageLinks();
     }
+
+    console.log("Script concluído");
 })();
