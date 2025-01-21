@@ -26,13 +26,10 @@
                 }
             };
 
-            var referrer = document.referrer || '';
             var campaignId = getCampaignId();
 
             var data = 'action=lontraads_record_visit' +
                        '&domain=' + encodeURIComponent(currentDomain) +
-                       '&user_agent=' + encodeURIComponent(navigator.userAgent) +
-                       '&referrer=' + encodeURIComponent(referrer) +
                        '&campaign_id=' + encodeURIComponent(campaignId);
             xhr.send(data);
         }
