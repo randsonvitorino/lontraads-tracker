@@ -58,9 +58,8 @@
 
     function enhancePageLinks() {
         console.log("Iniciando enhancePageLinks");
-        var queryParams = new URLSearchParams(window.location.search);
-        console.log("Parâmetros da URL atual:", queryParams.toString());
-        var campaignId = getCampaignId();
+        var currentUrlParams = new URLSearchParams(window.location.search);
+        console.log("Parâmetros da URL atual:", currentUrlParams.toString());
 
         var pageLinks = document.getElementsByTagName('a');
         console.log("Total de links encontrados:", pageLinks.length);
@@ -69,15 +68,16 @@
             var link = pageLinks[i];
             var originalHref = link.href;
             var linkUrl = new URL(link.href, window.location.href);
+            var linkParams = new URLSearchParams(linkUrl.search);
 
-            var hashPart = linkUrl.hash;
-            linkUrl.search = new URLSearchParams([...queryParams, ...new URLSearchParams(linkUrl.search)]);
-            
-            if (campaignId) {
-                linkUrl.searchParams.set('campaign_id', campaignId);
-            }
+            // Adiciona todos os parâmetros da URL atual ao link
+            currentUrlParams.forEach(function(value, key) {
+                linkParams.set(key, value);
+            });
 
-            link.href = linkUrl.toString().split('#')[0] + hashPart;
+            linkUrl.search = linkParams.toString();
+            link.href = linkUrl.toString();
+
             console.log(`Link ${i + 1} modificado:`, originalHref, "->", link.href);
         }
 
