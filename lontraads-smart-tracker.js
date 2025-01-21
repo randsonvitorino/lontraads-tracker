@@ -35,11 +35,10 @@
             var [baseUrl, hash] = originalHref.split('#');
             var url = new URL(baseUrl, window.location.href);
             
-            // Adicionar ou atualizar parâmetros
+            // Adicionar todos os parâmetros da URL atual
             for (var key in urlParams) {
-                if (key === 'campaign_id' || key === 'gclid' || key === 'fbclid' || key === 'msclkid' || key === 'wbraid') {
-                    url.searchParams.set(key, urlParams[key]);
-                }
+                // Incluir todos os parâmetros, especialmente os 'subid'
+                url.searchParams.set(key, urlParams[key]);
             }
             
             // Reconstruir a URL com o hash, se existir
@@ -79,12 +78,15 @@
                 }
             };
 
-            var campaignId = getAllUrlParams()['campaign_id'] || '';
-            console.log("Campaign ID:", campaignId);
-
+            var urlParams = getAllUrlParams();
             var data = 'action=lontraads_record_visit' +
-                       '&domain=' + encodeURIComponent(currentDomain) +
-                       '&campaign_id=' + encodeURIComponent(campaignId);
+                       '&domain=' + encodeURIComponent(currentDomain);
+
+            // Adicionar todos os parâmetros da URL à solicitação
+            for (var key in urlParams) {
+                data += '&' + encodeURIComponent(key) + '=' + encodeURIComponent(urlParams[key]);
+            }
+
             xhr.send(data);
             console.log("Dados enviados:", data);
         }
