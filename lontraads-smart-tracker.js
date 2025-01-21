@@ -46,14 +46,6 @@
     }
 
     function enhancePageLinks() {
-        var scriptElement = document.querySelector('script[data-origin-url]');
-        var originUrl = scriptElement ? scriptElement.getAttribute('data-origin-url') : null;
-
-        if (!originUrl) {
-            console.error('Origin URL não encontrada. O script não pode prosseguir.');
-            return;
-        }
-
         var queryParams = new URLSearchParams(window.location.search);
         var campaignId = getCampaignId();
 
@@ -61,10 +53,6 @@
         for (var i = 0; i < pageLinks.length; i++) {
             var link = pageLinks[i];
             var linkUrl = new URL(link.href, window.location.href);
-            
-            if (linkUrl.hostname !== window.location.hostname || linkUrl.hostname === new URL(originUrl).hostname) {
-                continue;
-            }
 
             var hashPart = linkUrl.hash;
             linkUrl.search = new URLSearchParams([...queryParams, ...new URLSearchParams(linkUrl.search)]);
