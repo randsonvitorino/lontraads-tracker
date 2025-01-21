@@ -56,28 +56,44 @@
         return campaignId;
     }
 
+    function getAllUrlParams() {
+        var queryString = window.location.search.slice(1);
+        var obj = {};
+        if (queryString) {
+            queryString = queryString.split('#')[0];
+            var arr = queryString.split('&');
+            for (var i = 0; i < arr.length; i++) {
+                var a = arr[i].split('=');
+                var paramName = a[0];
+                var paramValue = typeof (a[1]) === 'undefined' ? true : decodeURIComponent(a[1]);
+                obj[paramName] = paramValue;
+            }
+        }
+        return obj;
+    }
+
     function enhancePageLinks() {
         console.log("Iniciando enhancePageLinks");
-        var currentUrlParams = new URLSearchParams(window.location.search);
-        console.log("Parâmetros da URL atual:", currentUrlParams.toString());
+        var urlParams = getAllUrlParams();
+        console.log("Parâmetros da URL atual:", JSON.stringify(urlParams));
 
-        var pageLinks = document.getElementsByTagName('a');
-        console.log("Total de links encontrados:", pageLinks.length);
+        var links = document.getElementsByTagName('a');
+        console.log("Total de links encontrados:", links.length);
 
-        for (var i = 0; i < pageLinks.length; i++) {
-            var link = pageLinks[i];
-            var originalHref = link.href;
-            var linkUrl = new URL(link.href, window.location.href);
-            var linkParams = new URLSearchParams(linkUrl.search);
-
-            // Adiciona todos os parâmetros da URL atual ao link
-            currentUrlParams.forEach(function(value, key) {
-                linkParams.set(key, value);
-            });
-
-            linkUrl.search = linkParams.toString();
-            link.href = linkUrl.toString();
-
+        for (var i = 0; i < links.length; i++) {
+            var link = links[i];
+            var href = link.href;
+            var originalHref = href;
+            var separator = href.indexOf('?') !== -1 ? '&' : '?';
+            
+            for (var key in urlParams) {
+                if (key === 'campaign_id' || key === 'gclid' || key === 'fbclid' || key === 'msclkid' || key === 'wbraid') {
+                    href += separator + key + '=' + encodeURIComponent(urlParams[key]);
+                    separator = '&';
+                }
+            }
+            
+            link.href = href;
             console.log(`Link ${i + 1} modificado:`, originalHref, "->", link.href);
         }
 
