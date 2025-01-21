@@ -7,30 +7,9 @@
         return new URLSearchParams(window.location.search);
     }
 
-    function enhancePageLinks() {
-        console.log("Iniciando enhancePageLinks");
+    function getClickId() {
         var urlParams = getAllUrlParams();
-        console.log("Parâmetros da URL atual:", urlParams.toString());
-
-        var links = document.getElementsByTagName('a');
-        console.log("Total de links encontrados:", links.length);
-
-        for (var i = 0; i < links.length; i++) {
-            var link = links[i];
-            var originalHref = link.href;
-            
-            var url = new URL(originalHref, window.location.href);
-            
-            urlParams.forEach(function(value, key) {
-                url.searchParams.set(key, value);
-            });
-            
-            link.href = url.toString();
-            
-            console.log(`Link ${i + 1} modificado:`, originalHref, "->", link.href);
-        }
-
-        console.log("Modificação de links concluída");
+        return urlParams.get('gclid') || urlParams.get('wbraid') || urlParams.get('msclkid') || urlParams.get('fbclid') || '';
     }
 
     function sendVisitorData() {
@@ -61,11 +40,15 @@
             };
 
             var urlParams = getAllUrlParams();
+            var clickId = getClickId();
             var data = 'action=lontraads_record_visit' +
-                       '&domain=' + encodeURIComponent(currentDomain);
+                       '&domain=' + encodeURIComponent(currentDomain) +
+                       '&click_id=' + encodeURIComponent(clickId);
 
             urlParams.forEach(function(value, key) {
-                data += '&' + encodeURIComponent(key) + '=' + encodeURIComponent(value);
+                if (!['gclid', 'wbraid', 'msclkid', 'fbclid'].includes(key)) {
+                    data += '&' + encodeURIComponent(key) + '=' + encodeURIComponent(value);
+                }
             });
 
             xhr.send(data);
@@ -75,7 +58,6 @@
 
     function init() {
         console.log("Iniciando funções principais");
-        enhancePageLinks();
         sendVisitorData();
     }
 
@@ -86,22 +68,6 @@
         console.log("DOM já carregado, executando funções imediatamente");
         init();
     }
-
-    // Adiciona um ouvinte para modificar links dinâmicos
-    document.addEventListener('click', function(e) {
-        if (e.target.tagName === 'A') {
-            var link = e.target;
-            var url = new URL(link.href, window.location.href);
-            var urlParams = getAllUrlParams();
-            
-            urlParams.forEach(function(value, key) {
-                url.searchParams.set(key, value);
-            });
-            
-            link.href = url.toString();
-            console.log("Link clicado modificado:", link.href);
-        }
-    }, true);
 
     console.log("Script concluído");
 })();
